@@ -1,0 +1,19 @@
+{
+  "name": "url-shortener-10billion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/main.js",
+    "db:init": "node --env-file=.env scripts/create-table-dynamodb.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1097.0",
+    "@aws-sdk/lib-dynamodb": "^3.1097.0",
+    "hyper-express": "^7.0.2",
+    "zod": "^4.4.3"
+  }
+}
