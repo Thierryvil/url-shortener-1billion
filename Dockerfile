@@ -38,11 +38,11 @@ COPY --chown=node:node --from=build /app/scripts ./scripts
 
 USER node
 
-EXPOSE 5000
+EXPOSE 5000 9229
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD ["node", "-e", "fetch(`http://127.0.0.1:${process.env.PORT || 5000}/health`).then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
 
 ENTRYPOINT ["dumb-init", "--"]
 
-CMD ["node", "src/main.js"]
+CMD ["node", "--inspect=0.0.0.0:9229", "src/main.js"]

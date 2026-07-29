@@ -2,7 +2,9 @@ const HyperExpress = require('hyper-express');
 const { generateBase62 } = require('./utils');
 const { createUrlSchema } = require('./schemas');
 const { env } = require('./config');
-
+const { logger } = require('./logger')
+const { dynamodb } = require('./database/dynamodb');
+const { PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 
 const webserver = new HyperExpress.Server();
 
@@ -13,7 +15,19 @@ webserver.get('/health', async (request, response) => {
 webserver.get('/:code', async (request, response) => {
     const { code } = request.params;
 
-    response.redirect(`http://localhost/${code}`).status(302);
+    const result = await dynamodb.send(
+        new GetCommand({
+            TableName: 'url_mappings',
+            Key: { code },
+            ConsistentRead: true,
+        }),
+    );
+
+    if (!result.Item) {
+        return response.json({ error: { message: "URL_NOT_FOUND" } }).status(404)
+    }
+
+    response.redirect(result.Item.original_url).status(302);
 })
 
 webserver.post('/api/v1/urls', async (request, response) => {
@@ -27,12 +41,33 @@ webserver.post('/api/v1/urls', async (request, response) => {
 
     const code = generateBase62();
 
+    const mapping = {
+        code,
+        short_url: `http://localhost/${code}`,
+        original_url: url,
+        created_at: Math.floor(Date.now() / 1000),
+    }
+
+    try {
+        await dynamodb.send(
+            new PutCommand({
+                TableName: 'url_mappings',
+                Item: mapping,
+                ConditionExpression: "attribute_not_exists(#code)",
+                ExpressionAttributeNames: {
+                    "#code": "code",
+                },
+            }),
+        );
+    } catch (error) {
+        logger.error(error);
+        response.json({ error: { message: "IMPOSSIBLE_TO_SAVE_URL" } }).status(500)
+        return
+    }
+
+
     response
-        .json({
-            code,
-            short_url: `http://localhost/${code}`,
-            original_url: url
-        })
+        .json(mapping)
         .status(201);
 })
 
