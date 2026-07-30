@@ -26,4 +26,18 @@ module.exports = [
             ],
         },
     },
+    {
+        files: ["tests/load/**/*.js"],
+        languageOptions: {
+            ecmaVersion: "latest",
+            sourceType: "module",
+            globals: {
+                __ENV: "readonly",
+            },
+        },
+        rules: {
+            "no-undef": "error",
+            "no-unused-vars": "error",
+        },
+    },
 ];

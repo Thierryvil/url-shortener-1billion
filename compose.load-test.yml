@@ -1,0 +1,36 @@
+services:
+  load-test:
+    image: grafana/k6:2.1.0
+    environment:
+      BASE_URL: http://nginx
+      SCENARIO: ${K6_SCENARIO:-smoke}
+      DURATION: ${K6_DURATION:-}
+      REDIRECT_RPS: ${K6_REDIRECT_RPS:-}
+      CREATION_RPS: ${K6_CREATION_RPS:-}
+      BASELINE_RPS: ${K6_BASELINE_RPS:-}
+      PEAK_RPS: ${K6_PEAK_RPS:-}
+      BASELINE_DURATION: ${K6_BASELINE_DURATION:-}
+      SPIKE_RAMP_DURATION: ${K6_SPIKE_RAMP_DURATION:-}
+      PEAK_DURATION: ${K6_PEAK_DURATION:-}
+      RECOVERY_DURATION: ${K6_RECOVERY_DURATION:-}
+      SOAK_DURATION: ${K6_SOAK_DURATION:-}
+      REDIRECT_PRE_ALLOCATED_VUS: ${K6_REDIRECT_PRE_ALLOCATED_VUS:-}
+      REDIRECT_MAX_VUS: ${K6_REDIRECT_MAX_VUS:-}
+      CREATION_PRE_ALLOCATED_VUS: ${K6_CREATION_PRE_ALLOCATED_VUS:-}
+      CREATION_MAX_VUS: ${K6_CREATION_MAX_VUS:-}
+      SEED_COUNT: ${K6_SEED_COUNT:-}
+      HOT_RATIO: ${K6_HOT_RATIO:-}
+      HOT_SET_SIZE: ${K6_HOT_SET_SIZE:-}
+      VOLUME_ITERATIONS: ${K6_VOLUME_ITERATIONS:-}
+      VOLUME_VUS: ${K6_VOLUME_VUS:-}
+      VOLUME_MAX_DURATION: ${K6_VOLUME_MAX_DURATION:-}
+    volumes:
+      - ./tests/load:/scripts:ro
+      - ./tests/load/results:/results
+    command:
+      - run
+      - --summary-export=/results/load-test-summary.json
+      - /scripts/load-test.js
+    depends_on:
+      nginx:
+        condition: service_healthy
