@@ -1,4 +1,4 @@
-const { envSchema } = require("./schemas");
+const { envSchema } = require("./config.schema");
 
 const env = envSchema.parse(process.env);
 

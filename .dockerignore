@@ -4,6 +4,7 @@ coverage
 
 .git
 .gitignore
+.vscode
 
 .env
 .env.*
@@ -11,3 +12,7 @@ coverage
 
 *.log
 npm-debug.log*
+
+eslint.config.js
+compose*.yml
+Dockerfile*

@@ -1,9 +1,4 @@
 const { z } = require("zod");
-const { MAX_URL_SIZE } = require("./constants");
-
-const createUrlSchema = z.object({
-    url: z.string().url().min(1).max(MAX_URL_SIZE),
-});
 
 const envSchema = z.object({
     PORT: z.string().default("5000"),
@@ -19,6 +14,5 @@ const envSchema = z.object({
 });
 
 module.exports = {
-    createUrlSchema,
     envSchema
 }

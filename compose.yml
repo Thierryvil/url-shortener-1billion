@@ -16,6 +16,11 @@ services:
     depends_on:
       - dynamodb
       - redis
+
+    volumes:
+      - .:/app
+      - app-node-modules:/app/node_modules
+
     ports:
       - "5000:5000"
       - "9229:9229"
@@ -49,3 +54,4 @@ services:
 
 volumes:
   dynamodb-data:
+  app-node-modules:
