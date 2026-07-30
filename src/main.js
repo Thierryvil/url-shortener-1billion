@@ -14,7 +14,6 @@ redis.connect().then(() => {
     logger.info('Connected to Redis');
 }).catch((error) => {
     logger.error('Failed to connect to Redis:', error);
-    process.exit(1);
 });
 
 const webserver = new HyperExpress.Server();
@@ -30,10 +29,16 @@ webserver.get('/:code', async (request, response) => {
         return response.json({ error: { message: "INVALID_CODE" } }).status(400)
     }
 
-    const isCodeCached = await redis.get(code)
+    let cachedCode = null;
 
-    if (isCodeCached) {
-        return response.redirect(isCodeCached).status(302);
+    try {
+        cachedCode = await redis.get(code)
+    } catch {
+        logger.error(`Failed to retrieve code: ${code} from Redis`);
+    }
+
+    if (cachedCode) {
+        return response.redirect(cachedCode).status(302);
     }
 
     const result = await dynamodb.send(
@@ -48,7 +53,9 @@ webserver.get('/:code', async (request, response) => {
         return response.json({ error: { message: "URL_NOT_FOUND" } }).status(404)
     }
 
-    await redis.set(code, result.Item.original_url, 3600);
+    redis.set(code, result.Item.original_url, 3600).catch((error) => {
+        logger.error(`Failed to store code: ${code} in Redis`, error);
+    })
 
     response.redirect(result.Item.original_url).status(302);
 })
