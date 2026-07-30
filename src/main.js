@@ -6,6 +6,7 @@ const { logger } = require('./logger')
 const { dynamodb } = require('./database/dynamodb');
 const { PutCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
 const { RedisCache } = require('./cache/redis');
+const { ConditionalCheckFailedException } = require('@aws-sdk/client-dynamodb');
 
 const redis = new RedisCache();
 
@@ -61,36 +62,44 @@ webserver.post('/api/v1/urls', async (request, response) => {
 
     const { url } = data
 
-    const code = generateBase62();
+    for (let i = 0; i < env.MAX_CREATION_URL_TRIES; i++) {
+        const code = generateBase62();
 
-    const mapping = {
-        code,
-        short_url: `http://localhost/${code}`,
-        original_url: url,
-        created_at: Math.floor(Date.now() / 1000),
+        const mapping = {
+            code,
+            short_url: `http://localhost/${code}`,
+            original_url: url,
+            created_at: Math.floor(Date.now() / 1000),
+        }
+
+        try {
+            await dynamodb.send(
+                new PutCommand({
+                    TableName: 'url_mappings',
+                    Item: mapping,
+                    ConditionExpression: "attribute_not_exists(#code)",
+                    ExpressionAttributeNames: {
+                        "#code": "code",
+                    },
+                }),
+            );
+
+            return response.json(mapping).status(201);
+        } catch (error) {
+            logger.error(error);
+
+            if (error instanceof ConditionalCheckFailedException) {
+                logger.warn(`Code collision detected for code: ${code}. Retrying...`);
+                continue;
+            }
+
+            response.json({ error: { message: "IMPOSSIBLE_TO_SAVE_URL" } }).status(500)
+            return
+        }
     }
 
-    try {
-        await dynamodb.send(
-            new PutCommand({
-                TableName: 'url_mappings',
-                Item: mapping,
-                ConditionExpression: "attribute_not_exists(#code)",
-                ExpressionAttributeNames: {
-                    "#code": "code",
-                },
-            }),
-        );
-    } catch (error) {
-        logger.error(error);
-        response.json({ error: { message: "IMPOSSIBLE_TO_SAVE_URL" } }).status(500)
-        return
-    }
+    return response.json({ error: { message: "IMPOSSIBLE_TO_GENERATE_CODE" } }).status(503);
 
-
-    response
-        .json(mapping)
-        .status(201);
 })
 
 webserver.listen(env.PORT, env.HOST)

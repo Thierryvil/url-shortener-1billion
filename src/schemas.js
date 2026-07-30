@@ -10,10 +10,11 @@ const envSchema = z.object({
     HOST: z.string().default("0.0.0.0"),
     AWS_REGION: z.string().default("us-east-1"),
     DYNAMODB_ENDPOINT: z.string().default("http://dynamodb:8000"),
-    DYNAMODB_MAX_ATTEMPTS: z.number().default(3),
     AWS_ACCESS_KEY_ID: z.string().default("local"),
     AWS_SECRET_ACCESS_KEY: z.string().default("local"),
     REDIS_URL: z.string().default("redis://redis:6379"),
+    DYNAMODB_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
+    MAX_CREATION_URL_TRIES: z.coerce.number().int().positive().default(5),
 });
 
 module.exports = {
