@@ -16,7 +16,6 @@ services:
     depends_on:
       - dynamodb
       - redis
-
     ports:
       - "5000:5000"
       - "9229:9229"

@@ -15,6 +15,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1097.0",
     "hyper-express": "^7.0.2",
     "pino": "^10.3.1",
+    "redis": "^6.1.0",
     "zod": "^4.4.3"
   }
 }

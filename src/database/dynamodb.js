@@ -4,7 +4,7 @@ const { env } = require("../config");
 
 const rawDynamoClient = new DynamoDBClient({
     region: env.AWS_REGION,
-    maxAttempts: env.DYNAMOBDB_MAX_ATTEMPS,
+    maxAttempts: env.DYNAMODB_MAX_ATTEMPTS,
     endpoint: env.DYNAMODB_ENDPOINT,
     credentials: {
         accessKeyId: env.AWS_ACCESS_KEY_ID,
