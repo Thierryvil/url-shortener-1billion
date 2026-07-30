@@ -4,46 +4,67 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-
     environment:
       NODE_ENV: production
       PORT: "5000"
       HOST: 0.0.0.0
       DYNAMODB_ENDPOINT: http://dynamodb:8000
-      DYNAMODB_REGION: us-east-1
+      AWS_REGION: us-east-1
       AWS_ACCESS_KEY_ID: local
       AWS_SECRET_ACCESS_KEY: local
+      PUBLIC_BASE_URL: http://localhost:5000
     depends_on:
       - dynamodb
       - redis
-
     volumes:
       - .:/app
       - app-node-modules:/app/node_modules
-
-    ports:
-      - "5000:5000"
-      - "9229:9229"
+    expose:
+      - "5000"
+    deploy:
+      replicas: ${APP_REPLICAS:-2}
 
     restart: unless-stopped
 
     security_opt:
       - no-new-privileges:true
 
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "5000:80"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --quiet
+        - --tries=1
+        - --spider
+        - http://127.0.0.1/lb-health
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
   dynamodb:
     image: amazon/dynamodb-local:latest
     container_name: dynamodb-local
     user: root
     working_dir: /home/dynamodblocal
-
     command: >
       -jar DynamoDBLocal.jar
       -sharedDb
       -dbPath /home/dynamodblocal/data
-
     ports:
       - "8000:8000"
-
     volumes:
       - dynamodb-data:/home/dynamodblocal/data
 
