@@ -74,7 +74,7 @@ webserver.post('/api/v1/urls', async (request, response) => {
 
         const mapping = {
             code,
-            short_url: `http://localhost/${code}`,
+            short_url: `${env.PUBLIC_BASE_URL}/${code}`,
             original_url: url,
             created_at: Math.floor(Date.now() / 1000),
         }

@@ -15,6 +15,7 @@ const envSchema = z.object({
     REDIS_URL: z.string().default("redis://redis:6379"),
     DYNAMODB_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
     MAX_CREATION_URL_TRIES: z.coerce.number().int().positive().default(5),
+    PUBLIC_BASE_URL: z.string().url().default("http://url-shortener.to"),
 });
 
 module.exports = {
